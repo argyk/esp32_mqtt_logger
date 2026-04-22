@@ -96,9 +96,11 @@ void mqtt_init(void)
             .verification.certificate = cert_override_pem,
 #elif CERT_VALIDATE_MOSQUITTO_CA
             .verification.certificate = (const char *)mosquitto_org_crt_start,
-// #else
-//             .verification.crt_bundle_attach = esp_crt_bundle_attach, /* Use built-in certificate bundle */
+
 #endif
+            // #else
+            //.verification.crt_bundle_attach = esp_crt_bundle_attach, /* Use built-in certificate bundle */
+
         },
     };
 

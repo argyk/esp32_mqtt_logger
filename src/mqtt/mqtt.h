@@ -5,7 +5,7 @@
 
 
 // Configurations for MQTT client
-#define MQTT_BROKER_URI "mqtts://test.mosquitto.org:1883"
+#define MQTT_BROKER_URI "mqtt://broker.emqx.io:1883"
 #define BROKER_CERTIFICATE_OVERRIDDEN 0
 #define CERT_VALIDATE_MOSQUITTO_CA 0
 
