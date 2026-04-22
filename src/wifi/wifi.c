@@ -1,24 +1,17 @@
-#include <stdio.h>
+#include "wifi.h"
 #include "wifi_password.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 
-
-static const char *TAG = "wifi station";
-
-/* FreeRTOS event group to signal when we are connected*/
+static const char *WIFI = "wifi station";
 static EventGroupHandle_t wifi_event_group;
-/* The event group allows multiple bits for each event, but we only care about two events:
- * - we are connected to the AP with an IP
- * - we failed to connect after the maximum amount of retries */
-#define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT      BIT1
-
-#define WIFI_MAXIMUM_RETRY 10
 static int s_retry_num = 0;
 
+#define WIFI_CONNECTED_BIT BIT0
+#define WIFI_FAIL_BIT      BIT1
+#define WIFI_MAXIMUM_RETRY 10
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
@@ -29,22 +22,31 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         if (s_retry_num < WIFI_MAXIMUM_RETRY) {
             esp_wifi_connect();
             s_retry_num++;
-            ESP_LOGI(TAG, "retry to connect to the AP");
+            ESP_LOGI(WIFI, "retry to connect to the AP");
         } else {
             xEventGroupSetBits(wifi_event_group, WIFI_FAIL_BIT);
         }
-        ESP_LOGI(TAG,"connect to the AP fail");
+        ESP_LOGI(WIFI,"connect to the AP fail");
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+        ESP_LOGI(WIFI, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
         s_retry_num = 0;
+
+        esp_netif_dns_info_t dns = {0};
+        dns.ip.u_addr.ip4.addr = 0x08080808u;
+        dns.ip.type = ESP_IPADDR_TYPE_V4;
+        esp_netif_set_dns_info(esp_netif_get_default_netif(), ESP_NETIF_DNS_MAIN, &dns);
+        ESP_LOGI(WIFI, "DNS set to 8.8.8.8");
+
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
     }
 }
 
 
-void wifi_init(void)
+bool wifi_init(void)
 {
+    ESP_LOGI(WIFI, "ESP_WIFI_MODE_STA");
+
     // freeRTOS event group to signal when we are connected, and to manage connection retries
     wifi_event_group = xEventGroupCreate();
     
@@ -90,7 +92,7 @@ void wifi_init(void)
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
     ESP_ERROR_CHECK(esp_wifi_start() );
 
-    ESP_LOGI(TAG, "wifi_init finished.");
+    ESP_LOGI(WIFI, "wifi_init finished.");
 
     /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
      * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
@@ -103,26 +105,13 @@ void wifi_init(void)
     /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
      * happened. */
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "connected to SSID:%s",
-                 ESP_WIFI_SSID);
+        ESP_LOGI(WIFI, "connected to SSID:%s", ESP_WIFI_SSID);
+        return true;
     } else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s",
-                 ESP_WIFI_SSID);
-    } else {
-        ESP_LOGE(TAG, "UNEXPECTED EVENT");
+        ESP_LOGI(WIFI, "Failed to connect to SSID:%s", ESP_WIFI_SSID);
+        return false;
     }
-}
 
-void app_main(void)
-{
-    // Initialize NVS (Non-Volatile Storage) - required by WiFi
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
-
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
-    wifi_init();
+    ESP_LOGE(WIFI, "UNEXPECTED EVENT");
+    return false;
 }
