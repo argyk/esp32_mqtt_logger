@@ -36,8 +36,18 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(MQTT, "MQTT_EVENT_CONNECTED");
-            ret = esp_mqtt_client_subscribe(client, "/random/tmp0", 0);
+            ret = esp_mqtt_client_subscribe(client, "random/tmp0", 0);
             ESP_LOGI(MQTT, "sent subscribe successful, msg_id=%d", ret);
+
+            ret = esp_mqtt_client_subscribe(client, "random/tmp1", 1);
+            ESP_LOGI(MQTT, "sent subscribe successful, msg_id=%d", ret);
+
+            ret = esp_mqtt_client_publish(client, "random/tmp1", "this is esp32", 0, 1, 0);
+            ESP_LOGI(MQTT, "sent publish successful, msg_id=%d", ret);
+
+            ret = esp_mqtt_client_unsubscribe(client, "random/tmp1");
+            ESP_LOGI(MQTT, "sent unsubscribe successful, msg_id=%d", ret);
+
             break;
 
         case MQTT_EVENT_DISCONNECTED:
@@ -47,7 +57,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         case MQTT_EVENT_SUBSCRIBED:
             ESP_LOGI(MQTT, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
 
-            ret = esp_mqtt_client_publish(client, "/random/tmp0", "data", 0, 1, 0);
+            ret = esp_mqtt_client_publish(client, "random/tmp0", "data", 0, 1, 0);
             ESP_LOGI(MQTT, "sent publish successful, msg_id=%d", ret);
             break;
 

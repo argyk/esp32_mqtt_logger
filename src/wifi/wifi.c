@@ -80,7 +80,7 @@ bool wifi_init(void)
              * to WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK and set the password with length and format matching to
              * WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK standards.
              */
-            .threshold.authmode = WIFI_AUTH_WEP,
+            .threshold.authmode = WIFI_AUTH_WPA2_PSK, // WPA2 personal (psk)
             .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
 #ifdef CONFIG_ESP_WIFI_WPA3_COMPATIBLE_SUPPORT
             .disable_wpa3_compatible_mode = 0,
