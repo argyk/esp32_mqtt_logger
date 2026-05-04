@@ -3,6 +3,13 @@
 #include "nvs_flash.h"
 #include "wifi.h"
 #include "mqtt.h"
+#include "i2c.hpp"
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+
+static const char *TAG = "MAIN";
 
 
 void nvs_init(void)
@@ -16,11 +23,17 @@ void nvs_init(void)
 }
 
 
-void app_main(void)
+extern "C" void app_main(void)
 {
     nvs_init();
     if (wifi_init()) {
         mqtt_init();
+    }
+
+    I2CMaster i2c_master;
+    if (!i2c_master.init()) {
+        ESP_LOGE(TAG, "Failed to receive temperature data: %s", esp_err_to_name(ret));
+        return;
     }
 
 
