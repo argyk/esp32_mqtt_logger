@@ -32,7 +32,7 @@ extern "C" void app_main(void)
 
     I2CMaster i2c_master;
     if (!i2c_master.init()) {
-        ESP_LOGE(TAG, "Failed to receive temperature data: %s", esp_err_to_name(ret));
+        ESP_LOGE(TAG, "Failed to initialize I2C master");
         return;
     }
 

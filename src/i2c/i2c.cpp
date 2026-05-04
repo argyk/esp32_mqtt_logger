@@ -1,5 +1,6 @@
-#include "i2c.h"
-#include <complex.h>
+#include "i2c.hpp"
+
+static const char *I2C_MASTER = "I2C_MASTER";
 
 I2CMaster::~I2CMaster() {
     if (dev_handle) {
@@ -56,7 +57,7 @@ bool I2CMaster::init() {
 
 void I2CMaster::scan() {
     ESP_LOGI(I2C_MASTER, "Scanning I2C bus...");
-    for (int addr = 1; addr < 127; addr++) {
+    for (uint8_t addr = 1; addr < 127; addr++) {
         uint8_t data;
         esp_err_t ret = i2c_master_transmit_receive(dev_handle, &addr, 1, &data, 1, I2C_MASTER_TIMEOUT_MS);
         if (ret == ESP_OK) {
@@ -70,7 +71,7 @@ uint8_t I2CMaster::read_humidity() {
     uint8_t write_buf[1] = {CMD_GET_HUMIDITY};
     uint8_t read_buf[1] = {0};
 
-    esp_err_t ret = i2c_master_transmit(dev_handle, write_buf, sizeof uint8_t, I2C_MASTER_TIMEOUT_MS);
+    esp_err_t ret = i2c_master_transmit(dev_handle, write_buf, sizeof(write_buf), I2C_MASTER_TIMEOUT_MS);
     if (ret != ESP_OK) {
         ESP_LOGE(I2C_MASTER, "Failed to send humidity command: %s", esp_err_to_name(ret));
         return 0;
@@ -78,7 +79,7 @@ uint8_t I2CMaster::read_humidity() {
 
     vTaskDelay(pdMS_TO_TICKS(10));
 
-    ret = i2c_master_receive(dev_handle, read_buf, sizeof uint8_t, I2C_MASTER_TIMEOUT_MS);
+    ret = i2c_master_receive(dev_handle, read_buf, sizeof(read_buf), I2C_MASTER_TIMEOUT_MS);
     if (ret != ESP_OK) {
         ESP_LOGE(I2C_MASTER, "Failed to receive humidity data: %s", esp_err_to_name(ret));
         return 0;
@@ -91,7 +92,7 @@ float I2CMaster::read_temperature() {
     uint8_t write_buf[1] = {CMD_GET_TEMPERATURE};
     uint8_t read_buf[4];
 
-    esp_err_t ret = i2c_master_transmit(dev_handle, write_buf, sizeof uint8_t, I2C_MASTER_TIMEOUT_MS);
+    esp_err_t ret = i2c_master_transmit(dev_handle, write_buf, sizeof(write_buf), I2C_MASTER_TIMEOUT_MS);
     if (ret != ESP_OK) {
         ESP_LOGE(I2C_MASTER, "Failed to send temperature command: %s", esp_err_to_name(ret));
         return 0;
@@ -103,15 +104,17 @@ float I2CMaster::read_temperature() {
     if (ret != ESP_OK) {
         ESP_LOGE(I2C_MASTER, "Failed to receive temperature data: %s", esp_err_to_name(ret));
         return 0;
-    }   
+    }
+
+    float temperature;
+    memcpy(&temperature, read_buf, sizeof(temperature));
+    return temperature;
 }
 
 
 void i2c_task(void *param) {
     I2CMaster *master = static_cast<I2CMaster *>(param);
     master->scan();
-    float temp = master->read_temperature();
-    uint8_t humidity = master->read_humidity();
 
     while (true) {
         float temperature = master->read_temperature();

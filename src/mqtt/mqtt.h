@@ -3,6 +3,9 @@
 
 #include "mqtt_client.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Configurations for MQTT client
 // find local IP address using `ip addr` command, and update the MQTT_BROKER_URI accordingly
@@ -12,5 +15,9 @@
 
 
 void mqtt_init(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // MQTT_H

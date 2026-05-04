@@ -1,4 +1,4 @@
-file(GLOB_RECURSE SRCS "**/*.c")
+file(GLOB_RECURSE SRCS "**/*.c" "**/*.cpp")
 set(INCLUDES
     "."
     "main"
@@ -8,6 +8,6 @@ set(INCLUDES
 )
 
 idf_component_register(SRCS ${SRCS}
-                    REQUIRES esp_wifi nvs_flash esp_event esp-tls esp_driver_i2c
+                    REQUIRES esp_wifi nvs_flash esp_event esp-tls esp_driver_i2c driver
                     INCLUDE_DIRS ${INCLUDES}
                     EMBED_TXTFILES "mqtt/mosquitto.org.crt")
