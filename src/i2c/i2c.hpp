@@ -11,7 +11,7 @@
 // I2C configuration
 #define I2C_MASTER_SCL_PIN GPIO_NUM_9     // S3: adjust if needed
 #define I2C_MASTER_SDA_PIN GPIO_NUM_8     // S3: adjust if needed
-#define I2C_MASTER_FREQ_HZ 400000        // 400 kHz
+#define I2C_MASTER_FREQ_HZ 100000        // 100 kHz
 #define I2C_MASTER_TIMEOUT_MS 100
 
 // Slave address (must match slave)
@@ -35,5 +35,8 @@ class I2CMaster {
         i2c_master_bus_handle_t bus_handle;
         i2c_master_dev_handle_t dev_handle;
 };
+
+
+void i2c_task(void *param);
 
 #endif // I2C_HPP

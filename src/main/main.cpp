@@ -30,12 +30,12 @@ extern "C" void app_main(void)
         mqtt_init();
     }
 
-    I2CMaster i2c_master;
+    static I2CMaster i2c_master;
     if (!i2c_master.init()) {
         ESP_LOGE(TAG, "Failed to initialize I2C master");
         return;
     }
 
-
+    xTaskCreate(i2c_task, "i2c_task", 4096, &i2c_master, 5, NULL);
     
 }

@@ -58,8 +58,7 @@ bool I2CMaster::init() {
 void I2CMaster::scan() {
     ESP_LOGI(I2C_MASTER, "Scanning I2C bus...");
     for (uint8_t addr = 1; addr < 127; addr++) {
-        uint8_t data;
-        esp_err_t ret = i2c_master_transmit_receive(dev_handle, &addr, 1, &data, 1, I2C_MASTER_TIMEOUT_MS);
+        esp_err_t ret = i2c_master_probe(bus_handle, addr,I2C_MASTER_TIMEOUT_MS/2);
         if (ret == ESP_OK) {
             ESP_LOGI(I2C_MASTER, "Device found at address 0x%02X", addr);
         }
@@ -77,11 +76,11 @@ uint8_t I2CMaster::read_humidity() {
         return 0;
     }
 
-    vTaskDelay(pdMS_TO_TICKS(10));
+    vTaskDelay(pdMS_TO_TICKS(20));
 
     ret = i2c_master_receive(dev_handle, read_buf, sizeof(read_buf), I2C_MASTER_TIMEOUT_MS);
     if (ret != ESP_OK) {
-        ESP_LOGE(I2C_MASTER, "Failed to receive humidity data: %s", esp_err_to_name(ret));
+        ESP_LOGE(I2C_MASTER, "Failed to receive humidity: %s", esp_err_to_name(ret));
         return 0;
     }
 
@@ -95,19 +94,19 @@ float I2CMaster::read_temperature() {
     esp_err_t ret = i2c_master_transmit(dev_handle, write_buf, sizeof(write_buf), I2C_MASTER_TIMEOUT_MS);
     if (ret != ESP_OK) {
         ESP_LOGE(I2C_MASTER, "Failed to send temperature command: %s", esp_err_to_name(ret));
-        return 0;
+        return -999.0f;
     }
 
-    vTaskDelay(pdMS_TO_TICKS(10));
+    vTaskDelay(pdMS_TO_TICKS(20));
 
     ret = i2c_master_receive(dev_handle, read_buf, sizeof(read_buf), I2C_MASTER_TIMEOUT_MS);
     if (ret != ESP_OK) {
-        ESP_LOGE(I2C_MASTER, "Failed to receive temperature data: %s", esp_err_to_name(ret));
-        return 0;
+        ESP_LOGE(I2C_MASTER, "Failed to receive temperature: %s", esp_err_to_name(ret));
+        return -999.0f;
     }
 
     float temperature;
-    memcpy(&temperature, read_buf, sizeof(temperature));
+    std::memcpy(&temperature, read_buf, sizeof(float));
     return temperature;
 }
 
@@ -119,7 +118,13 @@ void i2c_task(void *param) {
     while (true) {
         float temperature = master->read_temperature();
         uint8_t humidity = master->read_humidity();
-        ESP_LOGI(I2C_MASTER, "Temperature: %.2f C, Humidity: %d%%", temperature, humidity);
+
+        if (temperature != -999.0f && humidity != 0) {
+            ESP_LOGI(I2C_MASTER, "Temperature: %.2f°C, Humidity: %d%%", temperature, humidity);
+        } else {
+            ESP_LOGW(I2C_MASTER, "Communication error");
+        }
+
         vTaskDelay(pdMS_TO_TICKS(1000)); // Read every 1 second
     }
 }
