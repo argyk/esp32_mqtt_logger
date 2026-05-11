@@ -5,7 +5,6 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include <cstdint>
 #include <cstring>
 
 // I2C configuration
@@ -15,7 +14,9 @@
 #define I2C_MASTER_TIMEOUT_MS 100
 
 // Slave address (must match slave)
-#define SLAVE_ADDRESS 0x55
+#define SLAVE_ESP32 0x55
+#define SLAVE_MP6050 0x68
+#define SLAVE_OLED 0x3C
 
 // Command codes
 #define CMD_GET_TEMPERATURE 0x01
@@ -23,17 +24,21 @@
 
 class I2CMaster {
     public:
-        I2CMaster() : bus_handle(nullptr), dev_handle(nullptr) {}
+        I2CMaster() : bus_handle(nullptr), dev_handle(nullptr), mp6050_handle(nullptr) {}
         ~I2CMaster();
 
         bool init();
         void scan();
-        uint8_t read_humidity();
+        int read_humidity();
         float read_temperature();
+        i2c_master_bus_handle_t get_bus_handle() const { return bus_handle; }
+        i2c_master_dev_handle_t get_mp6050_handle() const { return mp6050_handle; }
 
     private:
         i2c_master_bus_handle_t bus_handle;
         i2c_master_dev_handle_t dev_handle;
+        i2c_master_dev_handle_t mp6050_handle;
+
 };
 
 
