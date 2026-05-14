@@ -27,18 +27,21 @@ class I2CMaster {
         I2CMaster() : bus_handle(nullptr), dev_handle(nullptr), mp6050_handle(nullptr) {}
         ~I2CMaster();
 
-        bool init();
+        bool init(QueueHandle_t oled_queue);
         void scan();
         int read_humidity();
         float read_temperature();
         i2c_master_bus_handle_t get_bus_handle() const { return bus_handle; }
         i2c_master_dev_handle_t get_mp6050_handle() const { return mp6050_handle; }
+        QueueHandle_t get_oled_queue_handle() const { return mOledQ; }
 
     private:
         i2c_master_bus_handle_t bus_handle;
+
         i2c_master_dev_handle_t dev_handle;
         i2c_master_dev_handle_t mp6050_handle;
 
+        QueueHandle_t mOledQ;
 };
 
 

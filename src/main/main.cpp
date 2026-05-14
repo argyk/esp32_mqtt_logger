@@ -1,12 +1,15 @@
 #include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "wifi.h"
 #include "mqtt.h"
 #include "i2c.hpp"
+#include "oled.hpp"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+
 
 
 static const char *TAG = "MAIN";
@@ -31,11 +34,17 @@ extern "C" void app_main(void)
     }
 
     static I2CMaster i2c_master;
-    if (!i2c_master.init()) {
+    QueueHandle_t oledQ = xQueueCreate(1,sizeof(oled_message));
+
+    if (!i2c_master.init(oledQ)) {
         ESP_LOGE(TAG, "Failed to initialize I2C master");
         return;
     }
 
-    xTaskCreate(i2c_task, "i2c_task", 4096, &i2c_master, 5, NULL);
-    
+    static oledTaskData oledData = {.bus_handle=i2c_master.get_bus_handle(), .q=i2c_master.get_oled_queue_handle() };
+
+    xTaskCreate(i2c_task, "i2c_task", 4096, &i2c_master, 5, nullptr);
+    xTaskCreate(oled_task, "oled task", 4096, &oledData, 5, nullptr);
 }
+
+
