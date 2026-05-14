@@ -14,8 +14,11 @@ extern "C" {
 #define BROKER_CERTIFICATE_OVERRIDDEN 0
 #define CERT_VALIDATE_MOSQUITTO_CA 0
 
+#define MQTT_CONNECTED_BIT      BIT0
 
 void mqtt_init(void);
+EventGroupHandle_t mqtt_get_event_group(void);
+void mqtt_publish(const char* topic, const char* data);
 
 #ifdef __cplusplus
 }

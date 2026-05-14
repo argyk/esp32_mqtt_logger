@@ -1,5 +1,6 @@
 #include "i2c.hpp"
 #include "oled.hpp"
+#include "mqtt.h"
 #include "freertos/queue.h"
 
 static const char *TAG = "I2C";
@@ -116,7 +117,7 @@ void i2c_task(void *param) {
     I2CMaster *master = static_cast<I2CMaster *>(param);
     master->scan();
 
-
+    // TODO: move to new folder for MPU-6050
     uint8_t reg = 0x75;
     uint8_t who_am_i = 0;
     esp_err_t ret = i2c_master_transmit_receive(master->get_mp6050_handle(), &reg, 1, &who_am_i, 1, I2C_MASTER_TIMEOUT_MS);
@@ -128,7 +129,7 @@ void i2c_task(void *param) {
     } else {
         ESP_LOGI("MPU6050", "Device found! WHO_AM_I = 0x%02X", who_am_i);
     }
-
+    EventGroupHandle_t mqtt_event_handle = mqtt_get_event_group();
 
     while (true) {
         float temperature = master->read_temperature();
@@ -137,6 +138,17 @@ void i2c_task(void *param) {
         if (temperature != -999.0f && humidity != -1) {
             oled_message oledMsg = {.temperature= temperature, .humidity= humidity, .valid=true};
             xQueueOverwrite(master->get_oled_queue_handle(),&oledMsg);
+
+            if (xEventGroupGetBits(mqtt_event_handle) & MQTT_CONNECTED_BIT){
+                char buf[32];
+
+                snprintf(buf, sizeof(buf), "%.1f", temperature);
+                mqtt_publish("i2c/temperature", buf);
+
+                snprintf(buf, sizeof(buf), "%d", humidity);
+                mqtt_publish("i2c/humidity", buf);
+            }
+             
             ESP_LOGI(TAG, "Temp: %.2f C, Humidity: %d%%", temperature, humidity);
         } else {
             oled_message oledMsg = {.temperature{}, .humidity{}, .valid=false};
