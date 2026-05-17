@@ -4,6 +4,7 @@
 #include "freertos/queue.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "config.h"
 #include "wifi.h"
 #include "mqtt.h"
 #include "i2c.hpp"
@@ -29,6 +30,7 @@ void nvs_init(void)
 extern "C" void app_main(void)
 {
     nvs_init();
+    config_load();
     if (wifi_init()) {
         mqtt_init();
     }

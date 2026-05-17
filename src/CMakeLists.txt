@@ -6,6 +6,7 @@ set(INCLUDES
     "mqtt"
     "i2c"
     "oled"
+    "config"
 )
 
 idf_component_register(SRCS ${SRCS}

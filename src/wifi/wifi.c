@@ -1,5 +1,5 @@
 #include "wifi.h"
-#include "wifi_password.h"
+#include "config.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
@@ -73,20 +73,15 @@ bool wifi_init(void)
                                                         &instance_got_ip));
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = ESP_WIFI_SSID,
-            .password = ESP_WIFI_PASS,
-            /* Authmode threshold resets to WPA2 as default if password matches WPA2 standards (password len => 8).
-             * If you want to connect the device to deprecated WEP/WPA networks, Please set the threshold value
-             * to WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK and set the password with length and format matching to
-             * WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK standards.
-             */
-            .threshold.authmode = WIFI_AUTH_WPA2_PSK, // WPA2 personal (psk)
+            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
             .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
 #ifdef CONFIG_ESP_WIFI_WPA3_COMPATIBLE_SUPPORT
             .disable_wpa3_compatible_mode = 0,
 #endif
         },
     };
+    strlcpy((char *)wifi_config.sta.ssid,     config_get_wifi_ssid(), sizeof(wifi_config.sta.ssid));
+    strlcpy((char *)wifi_config.sta.password, config_get_wifi_pass(), sizeof(wifi_config.sta.password));
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
@@ -105,10 +100,10 @@ bool wifi_init(void)
     /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
      * happened. */
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(WIFI, "connected to SSID:%s", ESP_WIFI_SSID);
+        ESP_LOGI(WIFI, "connected to SSID:%s", config_get_wifi_ssid());
         return true;
     } else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGI(WIFI, "Failed to connect to SSID:%s", ESP_WIFI_SSID);
+        ESP_LOGI(WIFI, "Failed to connect to SSID:%s", config_get_wifi_ssid());
         return false;
     }
 
