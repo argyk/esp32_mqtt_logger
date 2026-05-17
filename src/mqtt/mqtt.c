@@ -1,8 +1,6 @@
 #include "mqtt.h"
 #include "config.h"
 #include "esp_log.h"
-#include "esp_crt_bundle.h"
-#include "esp_event.h"
 #include "mqtt_client.h"
 
 #include <string.h>
@@ -19,17 +17,6 @@ static int  s_active_broker  = 0;  // 0 = broker1, 1 = broker2
 static int  s_fail_count     = 0;
 static bool s_ever_connected = false;
 
-#if BROKER_CERTIFICATE_OVERRIDDEN
-static const char cert_override_pem[] =
-    "-----BEGIN CERTIFICATE-----\n"
-    CONFIG_EXAMPLE_BROKER_CERTIFICATE_OVERRIDE "\n"
-    "-----END CERTIFICATE-----";
-#endif
-
-#if CERT_VALIDATE_MOSQUITTO_CA
-extern const uint8_t mosquitto_org_crt_start[] asm("_binary_mosquitto_org_crt_start");
-extern const uint8_t mosquitto_org_crt_end[]   asm("_binary_mosquitto_org_crt_end");
-#endif
 
 static const char *active_uri(void)
 {
@@ -124,14 +111,7 @@ void mqtt_init(void)
     mqtt_event_group = xEventGroupCreate();
 
     const esp_mqtt_client_config_t mqtt_cfg = {
-        .broker = {
-            .address.uri = config_get_mqtt_broker1(),
-#if BROKER_CERTIFICATE_OVERRIDDEN
-            .verification.certificate = cert_override_pem,
-#elif CERT_VALIDATE_MOSQUITTO_CA
-            .verification.certificate = (const char *)mosquitto_org_crt_start,
-#endif
-        }
+        .broker.address.uri = config_get_mqtt_broker1(),
     };
 
     ESP_LOGI(TAG, "connecting to %s", config_get_mqtt_broker1());
