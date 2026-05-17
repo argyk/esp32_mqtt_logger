@@ -15,7 +15,7 @@
 
 // Slave address (must match slave)
 #define SLAVE_ESP32 0x55
-#define SLAVE_MP6050 0x68
+#define SLAVE_MP6050 0x69
 #define SLAVE_OLED 0x3C
 
 // Command codes
