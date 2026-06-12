@@ -7,6 +7,7 @@ set(INCLUDES
     "i2c"
     "oled"
     "config"
+    "sntp"
 )
 
 idf_component_register(SRCS ${SRCS}

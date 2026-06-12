@@ -79,3 +79,7 @@ Desktop.ini
 
 # sensitive data
 wifi_password.h
+
+# Claude Code local context (personal, not shared)
+.claude
+!CLAUDE.md
