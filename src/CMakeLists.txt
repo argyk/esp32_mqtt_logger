@@ -18,4 +18,5 @@ idf_component_register(SRCS ${SRCS}
                         esp_driver_i2c 
                         driver 
                         esp_lcd
+                        cjson
                     INCLUDE_DIRS ${INCLUDES})
