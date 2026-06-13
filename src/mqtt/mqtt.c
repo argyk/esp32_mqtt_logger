@@ -47,6 +47,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
     s_ever_connected = true;
     s_fail_count = 0;
     xEventGroupSetBits(mqtt_event_group, MQTT_CONNECTED_BIT);
+    // post that we are back online in the lwt
+    esp_mqtt_client_publish(event->client, "sensors/status", "online", 0, 1, 1);
     break;
 
   case MQTT_EVENT_DISCONNECTED:
