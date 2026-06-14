@@ -8,6 +8,7 @@ set(INCLUDES
     "oled"
     "config"
     "sntp"
+    "bme680"
 )
 
 idf_component_register(SRCS ${SRCS}

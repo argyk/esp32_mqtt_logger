@@ -1,3 +1,4 @@
+#include "bme680.hpp"
 #include "config.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -9,7 +10,6 @@
 #include "oled.hpp"
 #include "sntp.hpp"
 #include "wifi.h"
-#include <stdio.h>
 
 static const char *TAG = "MAIN";
 
@@ -38,6 +38,13 @@ extern "C" void app_main(void) {
   if (!i2c_master.init(oledQ)) {
     ESP_LOGE(TAG, "Failed to initialize I2C master");
     return;
+  }
+
+  static BME680 bme680;
+  if (bme680.init(i2c_master.get_bus_handle())) {
+    xTaskCreate(bme680_task, "bme680_task", 4096, &bme680, 5, nullptr);
+  } else {
+    ESP_LOGE(TAG, "BME680 init failed");
   }
 
   static oledTaskData oledData = {.bus_handle = i2c_master.get_bus_handle(),

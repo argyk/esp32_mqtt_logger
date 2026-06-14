@@ -9,6 +9,30 @@ dependencies:
       registry_url: https://components.espressif.com/
       type: service
     version: 1.7.19~2
+  espressif/cmake_utilities:
+    component_hash: 351350613ceafba240b761b4ea991e0f231ac7a9f59a9ee901f751bddc0bb18f
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=4.1'
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 0.5.3
+  espressif/i2c_bus:
+    component_hash: 483112c1619c54c38d0b734fb25f1678733267858a77b7af2f48cc7db6dbbd84
+    dependencies:
+    - name: espressif/cmake_utilities
+      registry_url: https://components.espressif.com
+      require: private
+      version: '*'
+    - name: idf
+      require: private
+      version: '>=4.0'
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 1.5.2
   espressif/mqtt:
     component_hash: ffdad5659706b4dc14bc63f8eb73ef765efa015bf7e9adf71c813d52a2dc9342
     dependencies:
@@ -19,6 +43,24 @@ dependencies:
       registry_url: https://components.espressif.com/
       type: service
     version: 1.0.0
+  francisduvivier/bme68x_sensorapi_espidf:
+    component_hash: b460c86c9c12643ac9456716da522926532c12165d957bc28605ebd5459bab6a
+    dependencies:
+    - name: espressif/cmake_utilities
+      registry_url: https://components.espressif.com
+      require: private
+      version: 0.*
+    - name: espressif/i2c_bus
+      registry_url: https://components.espressif.com
+      require: private
+      version: 1.*
+    - name: idf
+      require: private
+      version: '>=4.4'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 0.0.6
   idf:
     source:
       type: idf
@@ -26,7 +68,8 @@ dependencies:
 direct_dependencies:
 - espressif/cjson
 - espressif/mqtt
+- francisduvivier/bme68x_sensorapi_espidf
 - idf
-manifest_hash: d1b62c6ba85dc2fb327671d66cbbcb9e5839a2cdb37de082559717781a9ed5f1
+manifest_hash: d8d6cc60a8799cfe9b0fed26871dfd01eff4cb4e41d1f7bea2c8c13a6133e1bc
 target: esp32s3
 version: 3.0.0

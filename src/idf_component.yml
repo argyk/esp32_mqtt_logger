@@ -16,3 +16,4 @@ dependencies:
   #   public: true
   espressif/mqtt: '*'
   espressif/cjson: '*'
+  francisduvivier/bme68x_sensorapi_espidf: '*'

@@ -144,36 +144,37 @@ void i2c_task(void *param) {
     ESP_LOGI("MPU6050", "Device found! WHO_AM_I = 0x%02X", who_am_i);
   }
   EventGroupHandle_t mqtt_event_handle = mqtt_get_event_group();
-
-  while (true) {
-    float temperature = master->read_temperature();
-    int humidity = master->read_humidity();
-
-    if (temperature != -999.0f && humidity != -1) {
-      oled_message oledMsg = {
-          .temperature = temperature, .humidity = humidity, .valid = true};
-      xQueueOverwrite(master->get_oled_queue_handle(), &oledMsg);
-
-      if (xEventGroupGetBits(mqtt_event_handle) & MQTT_CONNECTED_BIT) {
-        cJSON *json = cJSON_CreateObject();
-        cJSON_AddNumberToObject(json, "timestamp", (double)time(NULL));
-        cJSON_AddNumberToObject(json, "temperature", temperature);
-        cJSON_AddNumberToObject(json, "humidity", humidity);
-        char *payload = cJSON_PrintUnformatted(json);
-        if (payload) {
-          mqtt_publish("sensors/i2c", payload);
-          cJSON_free(payload);
-        }
-        cJSON_Delete(json);
-      }
-
-      ESP_LOGI(TAG, "Temp: %.2f C, Humidity: %d%%", temperature, humidity);
-    } else {
-      oled_message oledMsg = {.temperature{}, .humidity{}, .valid = false};
-      xQueueOverwrite(master->get_oled_queue_handle(), &oledMsg);
-      ESP_LOGW(TAG, "Communication error");
-    }
-
-    vTaskDelay(pdMS_TO_TICKS(1000));
-  }
+  while (true)
+    ;
+  // while (true) {
+  //   float temperature = master->read_temperature();
+  //   int humidity = master->read_humidity();
+  //
+  //   if (temperature != -999.0f && humidity != -1) {
+  //     oled_message oledMsg = {
+  //         .temperature = temperature, .humidity = humidity, .valid = true};
+  //     xQueueOverwrite(master->get_oled_queue_handle(), &oledMsg);
+  //
+  //     if (xEventGroupGetBits(mqtt_event_handle) & MQTT_CONNECTED_BIT) {
+  //       cJSON *json = cJSON_CreateObject();
+  //       cJSON_AddNumberToObject(json, "timestamp", (double)time(NULL));
+  //       cJSON_AddNumberToObject(json, "temperature", temperature);
+  //       cJSON_AddNumberToObject(json, "humidity", humidity);
+  //       char *payload = cJSON_PrintUnformatted(json);
+  //       if (payload) {
+  //         mqtt_publish("sensors/i2c", payload);
+  //         cJSON_free(payload);
+  //       }
+  //       cJSON_Delete(json);
+  //     }
+  //
+  //     ESP_LOGI(TAG, "Temp: %.2f C, Humidity: %d%%", temperature, humidity);
+  //   } else {
+  //     oled_message oledMsg = {.temperature{}, .humidity{}, .valid = false};
+  //     xQueueOverwrite(master->get_oled_queue_handle(), &oledMsg);
+  //     ESP_LOGW(TAG, "Communication error");
+  //   }
+  //
+  //   vTaskDelay(pdMS_TO_TICKS(1000));
+  // }
 }
