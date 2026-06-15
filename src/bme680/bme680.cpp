@@ -8,10 +8,14 @@
 #include "esp_log.h"
 #include "esp_rom_sys.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
+#include "freertos/queue.h"
 #include "freertos/task.h"
 #include "hal/i2c_types.h"
+#include "i2c.hpp"
 #include "mqtt.h"
+#include "oled.hpp"
 #include "time.h"
 #include <cstdint>
 #include <cstring>
@@ -54,11 +58,11 @@ BME680::~BME680() {
     i2c_master_bus_rm_device(dev_handle);
 }
 
-bool BME680::init(i2c_master_bus_handle_t bus) {
+bool BME680::init(i2c_master_bus_handle_t bus, QueueHandle_t oled_queue) {
   i2c_device_config_t dev_cfg = {
       .dev_addr_length = I2C_ADDR_BIT_LEN_7,
       .device_address = BME680_I2C_ADDR,
-      .scl_speed_hz = 100000,
+      .scl_speed_hz = I2C_MASTER_FREQ_HZ,
       .scl_wait_us = 1000,
       .flags = {.disable_ack_check = false},
   };
@@ -98,6 +102,7 @@ bool BME680::init(i2c_master_bus_handle_t bus) {
     return false;
   }
 
+  mOledQ = oled_queue;
   return true;
 }
 
@@ -132,6 +137,13 @@ void bme680_task(void *param) {
     if (sensor->read(r)) {
       ESP_LOGI(TAG, "Temp: %.2fC, Hum: %.2f%%, Pres: %.2fhPa, Gas: %.0fΩ",
                r.temperature, r.humidity, r.pressure, r.gas_resistance);
+
+      oled_message oledMsg = {.temperature = r.temperature,
+                              .humidity = r.humidity,
+                              .pressure = r.pressure,
+                              .gas_resistance = r.gas_resistance,
+                              .valid = true};
+      xQueueOverwrite(sensor->get_oled_queue_handle(), &oledMsg);
 
       if (xEventGroupGetBits(mqtt_event) & MQTT_CONNECTED_BIT) {
         cJSON *json = cJSON_CreateObject();

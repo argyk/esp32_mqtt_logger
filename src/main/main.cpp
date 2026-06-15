@@ -5,6 +5,7 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "i2c.hpp"
+#include "mpu6050.hpp"
 #include "mqtt.h"
 #include "nvs_flash.h"
 #include "oled.hpp"
@@ -35,21 +36,27 @@ extern "C" void app_main(void) {
   static I2CMaster i2c_master;
   QueueHandle_t oledQ = xQueueCreate(1, sizeof(oled_message));
 
-  if (!i2c_master.init(oledQ)) {
+  if (!i2c_master.init()) {
     ESP_LOGE(TAG, "Failed to initialize I2C master");
     return;
   }
 
   static BME680 bme680;
-  if (bme680.init(i2c_master.get_bus_handle())) {
+  if (bme680.init(i2c_master.get_bus_handle(), oledQ)) {
     xTaskCreate(bme680_task, "bme680_task", 4096, &bme680, 5, nullptr);
   } else {
     ESP_LOGE(TAG, "BME680 init failed");
   }
 
-  static oledTaskData oledData = {.bus_handle = i2c_master.get_bus_handle(),
-                                  .q = i2c_master.get_oled_queue_handle()};
+  static MPU6050 mpu6050;
+  if (mpu6050.init(i2c_master.get_bus_handle())) {
+    xTaskCreate(mpu6050_task, "mpu6050_task", 4096, &mpu6050, 5, nullptr);
+  } else {
+    ESP_LOGE(TAG, "MPU6050 init failed");
+  }
 
-  xTaskCreate(i2c_task, "i2c_task", 4096, &i2c_master, 5, nullptr);
+  static oledTaskData oledData = {.bus_handle = i2c_master.get_bus_handle(),
+                                  .q = bme680.get_oled_queue_handle()};
+
   xTaskCreate(oled_task, "oled task", 4096, &oledData, 5, nullptr);
 }

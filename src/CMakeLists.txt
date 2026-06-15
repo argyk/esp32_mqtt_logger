@@ -9,6 +9,7 @@ set(INCLUDES
     "config"
     "sntp"
     "bme680"
+    "mpu6050"
 )
 
 idf_component_register(SRCS ${SRCS}
