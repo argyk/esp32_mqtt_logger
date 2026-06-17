@@ -15,6 +15,9 @@ void sntp_start(void) {
 }
 
 time_t sntp_wait_for_sync(void) {
+  // Set time-zone to CET/CEST
+  setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+  tzset();
   ESP_LOGI(TAG, "Waiting for SNTP sync ... ...");
   while (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED) {
     vTaskDelay(pdMS_TO_TICKS(500));

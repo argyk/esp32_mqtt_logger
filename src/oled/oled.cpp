@@ -3,6 +3,7 @@
 #include "esp_lcd_io_i2c.h"
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_panel_ssd1306.h"
+#include "time.h"
 
 static const char *TAG = "OLED";
 
@@ -60,18 +61,25 @@ void oled_task(void *param) {
   while (xQueueReceive(data->q, &msg, portMAX_DELAY)) {
 
     memset(buf, 0, sizeof(buf));
-    draw_string(buf, 0, 0, "Hello ESP32!");
+    draw_string(buf, 0, 0, "Sensor data BME680:");
 
     if (msg.valid) {
-      char line1[32], line2[32], line3[32], line4[32];
+      char line1[32], line2[32], line3[32], line4[32], line5[32], line6[32];
+      time_t now = time(NULL);
+      struct tm t;
+      localtime_r(&now, &t);
       snprintf(line1, sizeof(line1), "Temp: %.2fC", msg.temperature);
       snprintf(line2, sizeof(line2), "Hum:  %.2f%%", msg.humidity);
-      snprintf(line3, sizeof(line3), "Pres: %.0fhPa", msg.pressure);
-      snprintf(line4, sizeof(line4), "GasR: %.0fOhm", msg.gas_resistance);
+      snprintf(line3, sizeof(line3), "Pres: %.0f hPa", msg.pressure);
+      snprintf(line4, sizeof(line4), "GasR: %.0f Ohm", msg.gas_resistance);
+      snprintf(line5, sizeof(line5), " ");
+      strftime(line6, sizeof(line6), "%d/%m/%y %H:%M:%S", &t);
       draw_string(buf, 0, 1, line1);
       draw_string(buf, 0, 2, line2);
       draw_string(buf, 0, 3, line3);
       draw_string(buf, 0, 4, line4);
+      draw_string(buf, 0, 5, line5);
+      draw_string(buf, 0, 6, line6);
     } else {
       draw_string(buf, 0, 1, "Sensor error");
     }
